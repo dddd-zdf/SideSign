@@ -24,6 +24,7 @@ jobs:
         shell: bash
         run: |
           git show 752d1ef602aa792a432ffa1e71646dc1ecf7363c:Sources/Models/AppBundle.swift > Sources/Models/AppBundle.swift
+          swift package clean
           set +e
           swift test --disable-automatic-resolution --filter AppBundleTests > regression.log 2>&1
           status=$?
