@@ -117,25 +117,16 @@ public struct AppBundle: Sendable, Identifiable, Hashable, Equatable {
     }
 
     private func loadExtensions() -> Set<AppBundle> {
-        let fileManager = FileManager.default
-        let extensionDirectories = ["PlugIns", "Extensions"].map {
-            fileURL.appendingPathComponent($0)
-        }
-
-        let extensions = extensionDirectories.flatMap { directoryURL -> [AppBundle] in
-            guard let contents = try? fileManager.contentsOfDirectory(
-                at: directoryURL,
+        let contents = ["PlugIns", "Extensions"].flatMap { folder in
+            (try? FileManager.default.contentsOfDirectory(
+                at: fileURL.appendingPathComponent(folder),
                 includingPropertiesForKeys: nil,
                 options: [.skipsHiddenFiles]
-            ) else {
-                return []
-            }
-
-            return contents
-                .filter { $0.pathExtension.lowercased() == "appex" }
-                .compactMap { AppBundle(fileURL: $0) }
+            )) ?? []
         }
-
+        let extensions = contents
+            .filter { $0.pathExtension.lowercased() == "appex" }
+            .compactMap { AppBundle(fileURL: $0) }
         return Set(extensions)
     }
 
