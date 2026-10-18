@@ -1,0 +1,41 @@
+name: Extension discovery validation
+
+on:
+  push:
+    branches: [validation/extensionkit-discovery]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: macos-15
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Swift version
+        run: swift --version
+      - name: Test package
+        run: swift test --disable-automatic-resolution 2>&1 | tee full-tests.log
+      - name: Verify regression against unmodified main
+        shell: bash
+        run: |
+          git show 752d1ef602aa792a432ffa1e71646dc1ecf7363c:Sources/Models/AppBundle.swift > Sources/Models/AppBundle.swift
+          set +e
+          swift test --disable-automatic-resolution --filter AppBundleTests > regression.log 2>&1
+          status=$?
+          set -e
+          cat regression.log
+          if [ "$status" -eq 0 ]; then
+            echo "Expected discovery regression tests to fail against main"
+            exit 1
+          fi
+          grep -q 'Expectation failed' regression.log
+          git restore Sources/Models/AppBundle.swift
+      - name: Confirm clean checkout
+        run: git diff --exit-code
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: extension-discovery-validation
+          path: '*.log'
