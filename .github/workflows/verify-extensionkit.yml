@@ -13,9 +13,12 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Swift version
         run: swift --version
       - name: Test package
+        shell: bash
         run: swift test --disable-automatic-resolution 2>&1 | tee full-tests.log
       - name: Verify regression against unmodified main
         shell: bash
